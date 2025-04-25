@@ -18,7 +18,6 @@ const App = () => {
       </div>
     );
   }
-
   return (
     <BrowserRouter>
       <Navbar />
