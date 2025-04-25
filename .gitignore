@@ -27,3 +27,4 @@ cors.json
 # Local env files
 .env.*
 .env
+.env.local
