@@ -1,335 +1,278 @@
-import React, { useState, useEffect } from "react";
-import {
-  collection,
-  query,
-  getDocs,
-  where,
-  deleteDoc,
-  doc,
-} from "firebase/firestore";
-import { db } from "../backend/firebase";
-import { useAuth } from "../contexts/AuthContext"; // Make sure you have AuthContext set up
+import { FaGithub, FaFacebook, FaLinkedin, FaTiktok } from "react-icons/fa";
+import { useState } from "react";
+import { useEffect, useRef } from "react";
 
-export default function Home() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [itemType, setItemType] = useState("all");
-  const [error, setError] = useState(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const { currentUser, isAdmin } = useAuth(); // Add this hook
+const Home = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef(null);
 
-  const categories = [
-    "Electronics",
-    "Books",
-    "Clothing",
-    "Accessories",
-    "Documents",
-    "Others",
+  // Sample items data - replace with your actual data source
+  const allItems = [
+    {
+      id: 1,
+      name: "Water Bottle",
+      type: "Accessory",
+      date: "2024-03-15",
+      location: "Cafeteria",
+    },
+    {
+      id: 2,
+      name: "Math Textbook",
+      type: "Book",
+      date: "2024-03-14",
+      location: "Room 203",
+    },
+    {
+      id: 3,
+      name: "School Jacket",
+      type: "Clothing",
+      date: "2024-03-13",
+      location: "Playground",
+    },
   ];
-
-  const [formData, setFormData] = useState({
-    title: "",
-    category: "Electronics",
-    type: "lost",
-    location: "",
-    date: new Date().toISOString().split("T")[0],
-    description: "",
-  });
-
   useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        setLoading(true);
-        let itemsQuery = collection(db, "items");
+    if (searchQuery.length > 0) {
+      const filtered = allItems.filter((item) =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setFilteredSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [searchQuery]);
 
-        if (itemType !== "all") {
-          itemsQuery = query(itemsQuery, where("type", "==", itemType));
-        }
-
-        const querySnapshot = await getDocs(itemsQuery);
-        const itemsList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setItems(itemsList);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching items:", err);
-        setError("Failed to load items. Please try again later.");
-      } finally {
-        setLoading(false);
+  // Handle clicks outside the search container
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSuggestions(false);
       }
     };
 
-    fetchItems();
-  }, [itemType]);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
-  const handleAddItem = async (e) => {
-    e.preventDefault();
-    try {
-      const docRef = await addDoc(collection(db, "items"), {
-        ...formData,
-        createdAt: new Date(),
-        userId: currentUser.uid,
-      });
-      setItems([...items, { id: docRef.id, ...formData }]);
-      setIsAddModalOpen(false);
-      setFormData({
-        title: "",
-        category: "Electronics",
-        type: "lost",
-        location: "",
-        date: new Date().toISOString().split("T")[0],
-        description: "",
-      });
-    } catch (err) {
-      setError("Failed to add item");
-    }
+  const handleSuggestionClick = (itemName) => {
+    setSearchQuery(itemName);
+    setShowSuggestions(false);
   };
-
-  const handleDeleteItem = async (itemId) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      try {
-        await deleteDoc(doc(db, "items", itemId));
-        setItems(items.filter((item) => item.id !== itemId));
-      } catch (err) {
-        setError("Failed to delete item");
-      }
-    }
-  };
-
-  const handleEditItem = async (e) => {
-    e.preventDefault();
-    try {
-      await updateDoc(doc(db, "items", selectedItem.id), formData);
-      setItems(
-        items.map((item) =>
-          item.id === selectedItem.id ? { ...item, ...formData } : item
-        )
-      );
-      setIsEditModalOpen(false);
-      setSelectedItem(null);
-    } catch (err) {
-      setError("Failed to update item");
-    }
-  };
-
-  const filteredItems = items.filter(
-    (item) => selectedCategory === "all" || item.category === selectedCategory
-  );
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="text-center text-red-600 p-4">{error}</div>;
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold text-blue-700 text-center mb-8">
-        Welcome to USM Lost & Found
-      </h2>
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <div className="bg-blue-600 text-black py-16">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            Lost Something?
+          </h1>
+          <p className="text-xl mb-8">
+            Find your lost items quickly and easily with our lost & found system
+          </p>
+          <div className="max-w-2xl mx-auto relative" ref={searchRef}>
+            <input
+              type="text"
+              placeholder="Search for lost items (e.g., 'blue jacket', 'math book')"
+              className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setShowSuggestions(true)}
+            />
 
-      {isAdmin && (
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-          Add New Item
-        </button>
-      )}
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-6">
-        <select
-          className="p-2 border rounded-md"
-          value={itemType}
-          onChange={(e) => setItemType(e.target.value)}>
-          <option value="all">All Items</option>
-          <option value="lost">Lost Items</option>
-          <option value="found">Found Items</option>
-        </select>
-
-        <select
-          className="p-2 border rounded-md"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}>
-          <option value="all">All Categories</option>
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Items List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredItems.map((item) => (
-          <div
-            key={item.id}
-            className="border rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
-            <div
-              className={`text-sm font-semibold ${
-                item.type === "lost" ? "text-red-600" : "text-green-600"
-              } mb-2`}>
-              {item.type.toUpperCase()}
-            </div>
-            <h3 className="text-lg font-semibold">{item.title}</h3>
-            <p className="text-gray-600">Category: {item.category}</p>
-            <p className="text-gray-600">Location: {item.location}</p>
-            <p className="text-gray-600">
-              Date: {new Date(item.date).toLocaleDateString()}
-            </p>
-            {isAdmin && (
-              <div className="mt-4 flex gap-2">
-                <button
-                  onClick={() => {
-                    setSelectedItem(item);
-                    setFormData(item);
-                    setIsEditModalOpen(true);
-                  }}
-                  className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteItem(item.id)}
-                  className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
-                  Delete
-                </button>
+            {showSuggestions && filteredSuggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg">
+                {filteredSuggestions.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleSuggestionClick(item.name)}
+                    className="px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors">
+                    {item.name}
+                    <span className="ml-2 text-sm text-gray-500">
+                      ({item.type.toLowerCase()})
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
           </div>
-        ))}
+        </div>
       </div>
-
-      {filteredItems.length === 0 && !loading && (
-        <p className="text-center text-gray-500 mt-4">
-          No items found matching the selected filters.
-        </p>
-      )}
-
-      {/* Add Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h3 className="text-xl font-bold mb-4">Add New Item</h3>
-            <form onSubmit={handleAddItem}>
-              <input
-                type="text"
-                placeholder="Title"
-                className="w-full p-2 border mb-2 rounded"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-                required
-              />
-              <select
-                className="w-full p-2 border mb-2 rounded"
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value })
-                }
-                required>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="w-full p-2 border mb-2 rounded"
-                value={formData.type}
-                onChange={(e) =>
-                  setFormData({ ...formData, type: e.target.value })
-                }
-                required>
-                <option value="lost">Lost</option>
-                <option value="found">Found</option>
-              </select>
-              <input
-                type="text"
-                placeholder="Location"
-                className="w-full p-2 border mb-2 rounded"
-                value={formData.location}
-                onChange={(e) =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
-                required
-              />
-              <input
-                type="date"
-                className="w-full p-2 border mb-2 rounded"
-                value={formData.date}
-                onChange={(e) =>
-                  setFormData({ ...formData, date: e.target.value })
-                }
-                required
-              />
-              <textarea
-                placeholder="Description"
-                className="w-full p-2 border mb-2 rounded"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                required
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded">
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded">
-                  Add Item
-                </button>
+      {/* Features Section */}
+      <div className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center p-6">
+              <div className="bg-blue-100 w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
               </div>
-            </form>
+              <h3 className="text-xl font-semibold mb-2">Report Lost Item</h3>
+              <p className="text-gray-600">
+                Quickly report your lost item with details and last seen
+                location
+              </p>
+            </div>
+
+            <div className="text-center p-6">
+              <div className="bg-blue-100 w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Search Found Items</h3>
+              <p className="text-gray-600">
+                Browse through recently found items by students and staff
+              </p>
+            </div>
+
+            <div className="text-center p-6">
+              <div className="bg-blue-100 w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <svg
+                  className="w-8 h-8 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Claim Your Item</h3>
+              <p className="text-gray-600">
+                Safely claim your item after verification process
+              </p>
+            </div>
           </div>
         </div>
-      )}
-
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h3 className="text-xl font-bold mb-4">Edit Item</h3>
-            <form onSubmit={handleEditItem}>
-              {/* Same form fields as Add Modal */}
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditModalOpen(false);
-                    setSelectedItem(null);
-                  }}
-                  className="bg-gray-500 text-white px-4 py-2 rounded">
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded">
-                  Save Changes
-                </button>
+      </div>
+      {/* Recent Items Section */}
+      <div className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">
+            Recently Found Items
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {allItems.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center mb-4">
+                  <div className="bg-blue-100 p-3 rounded-lg">
+                    <svg
+                      className="w-6 h-6 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="ml-4 text-xl font-semibold">{item.name}</h3>
+                </div>
+                <div className="space-y-2 text-gray-600">
+                  <p>
+                    <span className="font-medium">Type:</span> {item.type}
+                  </p>
+                  <p>
+                    <span className="font-medium">Found Date:</span> {item.date}
+                  </p>
+                  <p>
+                    <span className="font-medium">Location:</span>{" "}
+                    {item.location}
+                  </p>
+                </div>
               </div>
-            </form>
+            ))}
           </div>
         </div>
-      )}
+      </div>
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div>
+              <h4 className="text-xl font-bold mb-4">Lost And Found</h4>
+              <p className="text-gray-400">
+                Helping reunite lost items with their owners since 2025
+              </p>
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Socials</h4>
+              <div className="flex space-x-4">
+                <a
+                  href="https://www.linkedin.com/in/khryz-navarro-b10b9131b/"
+                  className="text-gray-400 hover:text-blue-400"
+                  target="_blank">
+                  <FaLinkedin size={30} />
+                </a>
+                <a
+                  href="https://www.facebook.com/"
+                  className="text-gray-400 hover:text-blue-400"
+                  target="_blank">
+                  <FaFacebook size={30} />
+                </a>
+                <a
+                  href="https://github.com/Khryz-Navarro/Lost-Found"
+                  className="text-gray-400 hover:text-blue-400"
+                  target="_blank">
+                  <FaGithub size={30} />
+                </a>
+                <a
+                  href="https://www.tiktok.com/@khryznavarro"
+                  className="text-gray-400 hover:text-blue-400"
+                  target="_blank">
+                  <FaTiktok size={30} />
+                </a>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Contact</h4>
+              <ul className="space-y-2 text-gray-400">
+                <li>Email: lostandfound@usm.edu.ph</li>
+                <li>Phone: (555) 123-4567</li>
+                <li>Office: Room 105, Main Building</li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+            <p>© 2025 Lost And Found. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
-}
+};
+
+export default Home;

@@ -1,155 +1,85 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { auth } from "../backend/firebase";
+import { Link } from "react-router-dom";
+import { auth, signOutUser } from "../firebase";
 import { useEffect, useState } from "react";
-import { signOut } from "firebase/auth";
 
-function Navbar() {
+const Navbar = () => {
   const [user, setUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for admin auth
-    const checkAdminAuth = () => {
-      const adminAuth = localStorage.getItem("adminAuth");
-      if (adminAuth) {
-        try {
-          const { timestamp } = JSON.parse(adminAuth);
-          const now = new Date().getTime();
-          const fourHours = 4 * 60 * 60 * 1000;
-
-          if (now - timestamp > fourHours) {
-            localStorage.removeItem("adminAuth");
-            setIsAdmin(false);
-          } else {
-            setIsAdmin(true);
-          }
-        } catch (error) {
-          localStorage.removeItem("adminAuth");
-          setIsAdmin(false);
-        }
-      } else {
-        setIsAdmin(false);
-      }
-    };
-
-    // Check for regular user auth
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
     });
-
-    checkAdminAuth();
     return () => unsubscribe();
   }, []);
 
-  const handleSignOut = async () => {
+  const handleLogout = async () => {
     try {
-      if (isAdmin) {
-        localStorage.removeItem("adminAuth");
-        setIsAdmin(false);
-      } else {
-        await signOut(auth);
-      }
-      navigate("/");
+      await signOutUser();
+      window.location.href = "/login";
     } catch (error) {
-      console.error("Error signing out:", error);
+      console.error("Logout failed:", error);
     }
   };
 
   return (
-    <nav className="bg-white shadow p-4">
-      <div className="max-w-6xl mx-auto flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold text-blue-600">
-          USM Lost & Found
-        </Link>
-        <div className="space-x-4 flex items-center">
-          <Link to="/" className="text-gray-700 hover:text-blue-600">
-            Home
-          </Link>
-          <Link to="/lost-items" className="text-gray-700 hover:text-blue-600">
-            Lost Items
-          </Link>
-          <Link to="/found-items" className="text-gray-700 hover:text-blue-600">
-            Found Items
-          </Link>
-
-          {isAdmin ? (
-            <>
-              <Link
-                to="/admin/dashboard"
-                className="text-gray-700 hover:text-blue-600">
-                Dashboard
-              </Link>
-              <div className="relative">
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600">
-                  <span className="bg-gray-200 p-2 rounded-full">Admin</span>
-                </button>
-                {isMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                    <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                      Administrator
-                    </div>
-                    <button
-                      onClick={handleSignOut}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : user ? (
-            <>
-              <Link
-                to="/report-lost"
-                className="text-gray-700 hover:text-blue-600">
-                Report Lost
-              </Link>
-              <Link
-                to="/report-found"
-                className="text-gray-700 hover:text-blue-600">
-                Report Found
-              </Link>
-              <div className="relative">
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600">
-                  <img
-                    src={user.photoURL}
-                    alt="Profile"
-                    className="w-8 h-8 rounded-full"
-                    referrerPolicy="no-referrer"
-                  />
-                </button>
-                {isMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                    <div className="px-4 py-2 text-sm text-gray-700 border-b">
-                      {user.email}
-                    </div>
-                    <button
-                      onClick={handleSignOut}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <Link
-              to="/login"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-              Login
+    <nav className="bg-white shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 py-3">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center">
+            <Link to="/home" className="text-2xl font-bold text-blue-600">
+              Lost & Found
             </Link>
-          )}
+            <div className="hidden md:block ml-10">
+              <nav className="flex space-x-4">
+                <Link
+                  to="/home"
+                  className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600">
+                  Home
+                </Link>
+                <Link
+                  to="/report"
+                  className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600">
+                  Report Item
+                </Link>
+                <Link
+                  to="/items"
+                  className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600">
+                  Browse Items
+                </Link>
+              </nav>
+            </div>
+          </div>
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                Logout
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors">
+                Login
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </nav>
   );
-}
+};
 
 export default Navbar;
