@@ -273,12 +273,10 @@ const ItemsList = () => {
                     )}
                   </div>
                 </div>
-
                 <p className="mb-4 whitespace-pre-wrap">
                   {selectedItem.description}
                 </p>
               </div>
-
               <div className="sticky bottom-0 bg-white border-t p-4">
                 <div className="flex justify-end space-x-2">
                   <button

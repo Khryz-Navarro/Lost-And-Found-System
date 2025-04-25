@@ -105,16 +105,14 @@ export const getItems = async (filters = {}) => {
 };
 
 export const claimItem = async (itemId) => {
-  try {
-    await updateDoc(doc(db, "items", itemId), {
-      status: "claimed",
-      claimedAt: new Date(),
-      claimedBy: auth.currentUser.uid,
-    });
-  } catch (error) {
-    console.error("Error claiming item: ", error);
-    throw error;
-  }
+  const user = auth.currentUser; // Get current user
+  if (!user) throw new Error("User not authenticated");
+
+  // Update with the user's email instead of UID
+  await updateDoc(doc(db, "items", itemId), {
+    status: "claimed",
+    claimedBy: user.email, // Use email instead of user.uid
+  });
 };
 
 // Storage Functions
