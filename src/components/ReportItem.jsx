@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { addItem, uploadImage } from "../firebase";
+import { addItem } from "../firebase";
+import { supabase } from "../supabase"; // Add this import
 
 const initialFormState = {
   itemName: "",
@@ -14,6 +15,7 @@ const initialFormState = {
 
 const ReportItem = () => {
   const [formData, setFormData] = useState(initialFormState);
+  const [uploading, setUploading] = useState(false);
 
   const categories = [
     "Electronics",
@@ -27,18 +29,33 @@ const ReportItem = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Validate required fields
       if (!formData.category || !formData.date || !formData.location) {
         alert("Please fill all required fields");
         return;
       }
 
-      // Upload image if exists
-      const imageUrl = formData.image
-        ? await uploadImage(formData.image)
-        : null;
+      let imageUrl = null;
+      if (formData.image) {
+        setUploading(true);
+        const fileName = `items/${Date.now()}_${formData.image.name}`;
 
-      // Add to Firestore
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from("items")
+          .upload(fileName, formData.image);
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from("items")
+          .getPublicUrl(fileName);
+
+        imageUrl = urlData.publicUrl;
+        setUploading(false);
+      }
+
+      // Add to Firestore (keep existing Firestore code)
       await addItem({
         name: formData.itemName,
         description: formData.description,
@@ -49,10 +66,10 @@ const ReportItem = () => {
         image: imageUrl,
       });
 
-      // Reset form
       setFormData(initialFormState);
       alert("Item reported successfully!");
     } catch (error) {
+      setUploading(false);
       alert(error.message);
     }
   };

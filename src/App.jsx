@@ -7,6 +7,7 @@ import Login from "./components/Login";
 import ReportItem from "./components/ReportItem";
 import Navbar from "./components/Navbar";
 import ItemsList from "./components/ItemsList";
+import ArchivedItems from "./components/ArchivedItems";
 
 const App = () => {
   const { user, loading } = useAuth();
@@ -41,6 +42,10 @@ const App = () => {
         <Route
           path="/items"
           element={user ? <ItemsList /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/archived"
+          element={user ? <ArchivedItems /> : <Navigate to="/login" />}
         />
       </Routes>
     </BrowserRouter>

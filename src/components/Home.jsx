@@ -8,6 +8,7 @@ const Home = () => {
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef(null);
+  // const [loading] = useState(true);
 
   useEffect(() => {
     if (searchQuery.length > 0) {
@@ -40,6 +41,7 @@ const Home = () => {
     setSearchQuery(itemName);
     setShowSuggestions(false);
   };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}

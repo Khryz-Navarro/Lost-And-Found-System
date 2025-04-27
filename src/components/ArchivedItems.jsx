@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { db, getItems, claimItem } from "../firebase";
-import { query, collection, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
+import { query, collection, where, onSnapshot } from "firebase/firestore";
 import { BarLoader } from "react-spinners";
 
-const ItemsList = () => {
+const ArchivedItems = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -12,12 +11,9 @@ const ItemsList = () => {
   const [filters, setFilters] = useState({
     itemType: "all",
     category: "all",
-    status: "all",
   });
 
   const placeholderImage = "https://placehold.co/600x400";
-
-  // Add categories array
   const categories = [
     "Electronics",
     "Documents",
@@ -28,11 +24,12 @@ const ItemsList = () => {
   ];
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "items"), (snapshot) => {
+    const q = query(collection(db, "items"), where("status", "==", "claimed"));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const itemsData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-        // Convert Firestore timestamp to Date
         date: doc.data().date?.toDate(),
       }));
       setItems(itemsData);
@@ -42,29 +39,18 @@ const ItemsList = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleClaimItem = async (itemId) => {
-    try {
-      await claimItem(itemId);
-      alert("Item claimed successfully!");
-    } catch (error) {
-      console.error("Error claiming item:", error);
-      alert("Error claiming item. Please try again.");
-    }
-  };
-
   const filteredItems = items.filter((item) => {
     const matchesType =
       filters.itemType === "all" || item.type === filters.itemType;
     const matchesCategory =
       filters.category === "all" || item.category === filters.category;
-    const matchesStatus =
-      filters.status === "all" || item.status === filters.status;
     const matchesSearch =
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return matchesType && matchesCategory && matchesStatus && matchesSearch;
+    return matchesType && matchesCategory && matchesSearch;
   });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -78,10 +64,10 @@ const ItemsList = () => {
       <div className="max-w-7xl mx-auto">
         {/* Filters Section */}
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
+                Item Type
               </label>
               <select
                 className="w-full p-2 border rounded-md"
@@ -116,27 +102,11 @@ const ItemsList = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
-              <select
-                className="w-full p-2 border rounded-md"
-                value={filters.status}
-                onChange={(e) =>
-                  setFilters({ ...filters, status: e.target.value })
-                }>
-                <option value="all">All Statuses</option>
-                <option value="unclaimed">Unclaimed</option>
-                <option value="claimed">Claimed</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Search
               </label>
               <input
                 type="text"
-                placeholder="Search items..."
+                placeholder="Search archived items..."
                 className="w-full p-2 border rounded-md"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -145,31 +115,26 @@ const ItemsList = () => {
           </div>
         </div>
 
-        {/* Items Main Grid */}
+        {/* Items Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredItems.map((item) => (
             <div
               key={item.id}
               className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
               <img
-                src={item.image || placeholderImage} // ✅ Fallback if no image
+                src={item.image || placeholderImage}
                 alt={item.name}
                 className="w-full h-48 object-cover rounded-t-lg"
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = placeholderImage; // 🚨 Remove curly braces
+                  e.target.src = placeholderImage;
                 }}
               />
               <div className="p-4">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-lg font-semibold">{item.name}</h3>
-                  <span
-                    className={`px-2 py-1 text-sm rounded-full ${
-                      item.status === "Claimed"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-blue-100 text-blue-800"
-                    }`}>
-                    {item.status}
+                  <span className="px-2 py-1 text-sm rounded-full bg-green-100 text-green-800">
+                    Claimed
                   </span>
                 </div>
                 <p className="text-gray-600 text-sm mb-2">{item.description}</p>
@@ -182,31 +147,26 @@ const ItemsList = () => {
                     {item.category}
                   </p>
                   <p>
-                    <span className="font-medium">Date:</span>{" "}
+                    <span className="font-medium">Date Claimed:</span>{" "}
                     {new Date(item.date).toLocaleDateString()}
                   </p>
                   <p>
                     <span className="font-medium">Location:</span>{" "}
                     {item.location}
                   </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    <span className="font-medium">Submitted By:</span>{" "}
-                    {item.reportedBy}
-                  </p>
+                  {item.claimedBy && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      <span className="font-medium">Claimed By:</span>{" "}
+                      {item.claimedBy}
+                    </p>
+                  )}
                 </div>
-                <div className="mt-4 flex justify-end space-x-2">
+                <div className="mt-4 flex justify-end">
                   <button
                     onClick={() => setSelectedItem(item)}
                     className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
                     View Details
                   </button>
-                  {item.status === "Unclaimed" && (
-                    <button
-                      onClick={() => handleClaimItem(item.id)}
-                      className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">
-                      Claim Item
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -230,7 +190,7 @@ const ItemsList = () => {
                 <img
                   src={selectedItem.image || placeholderImage}
                   alt={selectedItem.name}
-                  className="w-full h-64 object-cover mb-4 rounded-lg"
+                  className="w-full h-64 object-contain mb-4 rounded-lg"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = placeholderImage;
@@ -304,4 +264,4 @@ const ItemsList = () => {
   );
 };
 
-export default ItemsList;
+export default ArchivedItems;
