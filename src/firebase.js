@@ -107,9 +107,9 @@ export const claimItem = async (itemId) => {
   if (!user) throw new Error("User not authenticated");
 
   // Update with the user's email instead of UID
-  await updateDoc(doc(db, "items", itemId), {
+  await updateDoc(itemRef, {
     status: "claimed",
-    claimedBy: user.email, // Use email instead of user.uid
+    claimedBy: user.email, // Changed from UID to email
   });
 };
 

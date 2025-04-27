@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { db, getItems, claimItem } from "../firebase";
 import { query, collection, onSnapshot } from "firebase/firestore";
 import { BarLoader } from "react-spinners";
+import { useAuth } from "../context/useAuth"; // Add this import
 
 const ItemsList = () => {
+  const { user } = useAuth(); // Add this line
   const [sortBy, setSortBy] = useState("newest");
   const [selectedImage, setSelectedImage] = useState(null);
   const [items, setItems] = useState([]);
@@ -48,6 +50,11 @@ const ItemsList = () => {
     try {
       await claimItem(itemId);
       alert("Item claimed successfully!");
+      const item = items.find((item) => item.id === itemId);
+      if (item.reportedBy === user.email) {
+        alert("You cannot claim your own item.");
+        return;
+      }
     } catch (error) {
       console.error("Error claiming item:", error);
       alert("Error claiming item. Please try again.");
@@ -222,13 +229,14 @@ const ItemsList = () => {
                     className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
                     View Details
                   </button>
-                  {item.status === "unclaimed" && (
-                    <button
-                      onClick={() => handleClaimItem(item.id)}
-                      className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">
-                      Claim Item
-                    </button>
-                  )}
+                  {item.status === "unclaimed" &&
+                    user?.email !== item.reportedBy && (
+                      <button
+                        onClick={() => handleClaimItem(item.id)}
+                        className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">
+                        Claim Item
+                      </button>
+                    )}
                 </div>
               </div>
             </div>
@@ -307,16 +315,17 @@ const ItemsList = () => {
                     className="px-4 py-2 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700">
                     Close
                   </button>
-                  {selectedItem.status === "unclaimed" && (
-                    <button
-                      onClick={() => {
-                        handleClaimItem(selectedItem.id);
-                        setSelectedItem(null);
-                      }}
-                      className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">
-                      Claim Item
-                    </button>
-                  )}
+                  {setSelectedItem.status === "unclaimed" &&
+                    user?.email !== setSelectedItem.reportedBy && (
+                      <button
+                        onClick={() => {
+                          handleClaimItem(selectedItem.id);
+                          setSelectedItem(null);
+                        }}
+                        className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">
+                        Claim Item
+                      </button>
+                    )}
                 </div>
               </div>
             </div>
