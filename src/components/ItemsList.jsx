@@ -48,16 +48,22 @@ const ItemsList = () => {
 
   const handleClaimItem = async (itemId) => {
     try {
-      await claimItem(itemId);
-      alert("Item claimed successfully!");
+      if (!user) {
+        alert("You need to log in to claim an item.");
+        return;
+      }
+
       const item = items.find((item) => item.id === itemId);
       if (item.reportedBy === user.email) {
         alert("You cannot claim your own item.");
         return;
       }
+
+      await claimItem(itemId);
+      alert("Item claimed successfully!");
     } catch (error) {
       console.error("Error claiming item:", error);
-      alert("Error claiming item. Please try again.");
+      alert(error.message || "Error claiming item. Please try again.");
     }
   };
 

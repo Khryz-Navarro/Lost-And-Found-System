@@ -14,6 +14,7 @@ import {
   getDocs,
   updateDoc,
   doc,
+  getDoc, // Add this import
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -103,13 +104,22 @@ export const getItems = async (filters = {}) => {
 };
 
 export const claimItem = async (itemId) => {
-  const user = auth.currentUser; // Get current user
-  if (!user) throw new Error("User not authenticated");
+  const user = auth.currentUser;
+  if (!user || !user.email) throw new Error("User not authenticated");
 
-  // Update with the user's email instead of UID
+  const itemRef = doc(db, "items", itemId);
+  const docSnap = await getDoc(itemRef); // Now works with proper import
+
+  if (!docSnap.exists()) {
+    throw new Error("Item does not exist");
+  }
+
+  if (docSnap.data().reportedBy === user.email) {
+    throw new Error("You cannot claim your own item");
+  }
   await updateDoc(itemRef, {
     status: "claimed",
-    claimedBy: user.email, // Changed from UID to email
+    claimedBy: user.email,
   });
 };
 

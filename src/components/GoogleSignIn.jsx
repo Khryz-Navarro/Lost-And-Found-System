@@ -1,10 +1,21 @@
 import { signInWithGoogle } from "../firebase";
 import { FcGoogle } from "react-icons/fc";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 function GoogleSignIn() {
+  // Update the handleGoogleSignIn function
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
+      const result = await signInWithGoogle();
+      // Create/update user document
+      await setDoc(doc(db, "users", result.user.uid), {
+        email: result.user.email,
+        createdAt: new Date(),
+        lastLogin: new Date(),
+        displayName: result.user.displayName,
+        photoURL: result.user.photoURL,
+      });
       window.location.href = "/home";
     } catch (error) {
       console.error("Google sign-in failed:", error);
