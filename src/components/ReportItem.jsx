@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { addItem } from "../firebase";
 import { supabase } from "../supabase"; // Add this import
+import { uploadImageToSupabase } from "../supabase";
 
 const initialFormState = {
   itemName: "",
@@ -37,25 +38,27 @@ const ReportItem = () => {
       let imageUrl = null;
       if (formData.image) {
         setUploading(true);
+
+        // Generate unique filename with folder structure
         const fileName = `items/${Date.now()}_${formData.image.name}`;
 
         // Upload to Supabase Storage
-        const { error: uploadError } = await supabase.storage
+        const { data, error } = await supabase.storage
           .from("items")
           .upload(fileName, formData.image);
 
-        if (uploadError) throw uploadError;
+        if (error) throw error;
 
-        // Get public URL
+        // Get public URL (use the returned data.path)
         const { data: urlData } = supabase.storage
           .from("items")
-          .getPublicUrl(fileName);
+          .getPublicUrl(data.path);
 
         imageUrl = urlData.publicUrl;
         setUploading(false);
       }
 
-      // Add to Firestore (keep existing Firestore code)
+      // Add to Firestore
       await addItem({
         name: formData.itemName,
         description: formData.description,
@@ -70,7 +73,7 @@ const ReportItem = () => {
       alert("Item reported successfully!");
     } catch (error) {
       setUploading(false);
-      alert(error.message);
+      alert(error.message || "Error submitting report");
     }
   };
 
@@ -212,9 +215,9 @@ const ReportItem = () => {
               </Link>
               <button
                 type="submit"
-                // Remove onClick handler here
-                className="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Submit Report
+                disabled={uploading}
+                className="inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
+                {uploading ? "Uploading..." : "Submit Report"}
               </button>
             </div>
           </form>

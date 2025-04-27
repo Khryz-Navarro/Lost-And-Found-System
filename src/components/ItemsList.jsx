@@ -5,6 +5,7 @@ import { query, collection, onSnapshot } from "firebase/firestore";
 import { BarLoader } from "react-spinners";
 
 const ItemsList = () => {
+  const [selectedImage, setSelectedImage] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -152,12 +153,13 @@ const ItemsList = () => {
               key={item.id}
               className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
               <img
-                src={item.image || placeholderImage} // ✅ Fallback if no image
+                src={item.image || placeholderImage}
                 alt={item.name}
-                className="w-full h-48 object-cover rounded-t-lg"
+                className="w-full h-48 object-cover rounded-t-lg cursor-zoom-in"
+                onClick={() => setSelectedImage(item.image)} // Add this click handler
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = placeholderImage; // 🚨 Remove curly braces
+                  e.target.src = placeholderImage;
                 }}
               />
               <div className="p-4">
@@ -165,7 +167,7 @@ const ItemsList = () => {
                   <h3 className="text-lg font-semibold">{item.name}</h3>
                   <span
                     className={`px-2 py-1 text-sm rounded-full ${
-                      item.status === "Claimed"
+                      item.status === "claimed"
                         ? "bg-green-100 text-green-800"
                         : "bg-blue-100 text-blue-800"
                     }`}>
@@ -200,7 +202,7 @@ const ItemsList = () => {
                     className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
                     View Details
                   </button>
-                  {item.status === "Unclaimed" && (
+                  {item.status === "unclaimed" && (
                     <button
                       onClick={() => handleClaimItem(item.id)}
                       className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">
@@ -230,7 +232,8 @@ const ItemsList = () => {
                 <img
                   src={selectedItem.image || placeholderImage}
                   alt={selectedItem.name}
-                  className="w-full h-64 object-cover mb-4 rounded-lg"
+                  className="w-full h-64 object-cover mb-4 rounded-lg cursor-zoom-in"
+                  onClick={() => setSelectedImage(selectedItem.image)}
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = placeholderImage;
@@ -300,6 +303,22 @@ const ItemsList = () => {
           </div>
         )}
       </div>
+      {selectedImage && (
+        <div className="fixed inset-0 z-50 bg-opacity-90 flex items-center justify-center p-4">
+          <div className="relative max-w-full max-h-full">
+            <img
+              src={selectedImage}
+              alt="Full resolution"
+              className="max-w-[90vw] max-h-[90vh] object-contain"
+            />
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 text-white text-4xl hover:text-gray-300">
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

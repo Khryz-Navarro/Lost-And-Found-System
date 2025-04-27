@@ -4,6 +4,7 @@ import { query, collection, where, onSnapshot } from "firebase/firestore";
 import { BarLoader } from "react-spinners";
 
 const ArchivedItems = () => {
+  const [selectedImage, setSelectedImage] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -124,7 +125,8 @@ const ArchivedItems = () => {
               <img
                 src={item.image || placeholderImage}
                 alt={item.name}
-                className="w-full h-48 object-cover rounded-t-lg"
+                className="w-full h-48 object-cover rounded-t-lg cursor-zoom-in"
+                onClick={() => setSelectedImage(item.image)} // Add this
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = placeholderImage;
@@ -187,10 +189,20 @@ const ArchivedItems = () => {
               </div>
 
               <div className="p-6">
-                <img
+                {/* <img
                   src={selectedItem.image || placeholderImage}
                   alt={selectedItem.name}
                   className="w-full h-64 object-contain mb-4 rounded-lg"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = placeholderImage;
+                  }}
+                /> */}
+                <img
+                  src={selectedItem.image || placeholderImage}
+                  alt={selectedItem.name}
+                  className="w-full h-48 object-contain rounded-t-lg cursor-zoom-in"
+                  onClick={() => setSelectedImage(selectedItem.image)} // Add this
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = placeholderImage;
@@ -260,6 +272,22 @@ const ArchivedItems = () => {
           </div>
         )}
       </div>
+      {selectedImage && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4">
+          <div className="relative max-w-full max-h-full">
+            <img
+              src={selectedImage}
+              alt="Full resolution"
+              className="max-w-[90vw] max-h-[90vh] object-contain"
+            />
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-4 right-4 text-white text-4xl hover:text-gray-300">
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

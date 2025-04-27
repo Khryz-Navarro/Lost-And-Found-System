@@ -15,7 +15,6 @@ import {
   updateDoc,
   doc,
 } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -30,7 +29,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: "select_account",
@@ -116,22 +114,22 @@ export const claimItem = async (itemId) => {
 };
 
 // Storage Functions
-export const uploadImage = async (file) => {
-  try {
-    // Add timestamp to ensure unique filenames
-    const fileName = `${Date.now()}_${file.name}`;
-    const storageRef = ref(storage, `items/${fileName}`);
+// export const uploadImage = async (file) => {
+//   try {
+//     // Add timestamp to ensure unique filenames
+//     const fileName = `${Date.now()}_${file.name}`;
+//     const storageRef = ref(storage, `items/${fileName}`);
 
-    // Upload file
-    const snapshot = await uploadBytes(storageRef, file);
+//     // Upload file
+//     const snapshot = await uploadBytes(storageRef, file);
 
-    // Get public URL
-    return await getDownloadURL(snapshot.ref);
-  } catch (error) {
-    console.error("Image upload failed:", error);
-    throw new Error("Image upload failed. Please try again.");
-  }
-};
+//     // Get public URL
+//     return await getDownloadURL(snapshot.ref);
+//   } catch (error) {
+//     console.error("Image upload failed:", error);
+//     throw new Error("Image upload failed. Please try again.");
+//   }
+// };
 
 // const getItemsByUser = async (email) => {
 //   const q = query(collection(db, "items"), where("reportedBy", "==", email));
