@@ -5,6 +5,7 @@ import { query, collection, onSnapshot } from "firebase/firestore";
 import { BarLoader } from "react-spinners";
 
 const ItemsList = () => {
+  const [sortBy, setSortBy] = useState("newest");
   const [selectedImage, setSelectedImage] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,19 +54,27 @@ const ItemsList = () => {
     }
   };
 
-  const filteredItems = items.filter((item) => {
-    const matchesType =
-      filters.itemType === "all" || item.type === filters.itemType;
-    const matchesCategory =
-      filters.category === "all" || item.category === filters.category;
-    const matchesStatus =
-      filters.status === "all" || item.status === filters.status;
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredItems = items
+    .filter((item) => {
+      const matchesType =
+        filters.itemType === "all" || item.type === filters.itemType;
+      const matchesCategory =
+        filters.category === "all" || item.category === filters.category;
+      const matchesStatus =
+        filters.status === "all" || item.status === filters.status;
+      const matchesSearch =
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return matchesType && matchesCategory && matchesStatus && matchesSearch;
-  });
+      return matchesType && matchesCategory && matchesStatus && matchesSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === "newest") {
+        return b.date - a.date; // Newest first
+      }
+      return a.date - b.date; // Oldest first
+    });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -79,7 +88,7 @@ const ItemsList = () => {
       <div className="max-w-7xl mx-auto">
         {/* Filters Section */}
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Item Type
@@ -130,7 +139,18 @@ const ItemsList = () => {
                 <option value="claimed">Claimed</option>
               </select>
             </div>
-
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Sort By
+              </label>
+              <select
+                className="w-full p-2 border rounded-md"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+              </select>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Search
@@ -304,7 +324,7 @@ const ItemsList = () => {
         )}
       </div>
       {selectedImage && (
-        <div className="fixed inset-0 z-50 bg-opacity-90 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 backdrop-blur-lg bg-opacity-90 flex items-center justify-center p-4">
           <div className="relative max-w-full max-h-full">
             <img
               src={selectedImage}

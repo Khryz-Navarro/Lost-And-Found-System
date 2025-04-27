@@ -201,7 +201,7 @@ const ArchivedItems = () => {
                 <img
                   src={selectedItem.image || placeholderImage}
                   alt={selectedItem.name}
-                  className="w-full h-48 object-contain rounded-t-lg cursor-zoom-in"
+                  className="w-full h-64 object-cover mb-4 rounded-lg cursor-zoom-in"
                   onClick={() => setSelectedImage(selectedItem.image)} // Add this
                   onError={(e) => {
                     e.target.onerror = null;
@@ -273,7 +273,7 @@ const ArchivedItems = () => {
         )}
       </div>
       {selectedImage && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 backdrop-blur-lg bg-opacity-90 flex items-center justify-center p-4">
           <div className="relative max-w-full max-h-full">
             <img
               src={selectedImage}
