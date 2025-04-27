@@ -1,12 +1,21 @@
+import FiltersSection from "./FiltersSection";
+import PaginationControls from "./PaginationControls";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { db, getItems, claimItem } from "../firebase";
-import { query, collection, onSnapshot } from "firebase/firestore";
+import {
+  query,
+  collection,
+  onSnapshot,
+  limit,
+  startAfter,
+  orderBy,
+} from "firebase/firestore";
 import { BarLoader } from "react-spinners";
-import { useAuth } from "../context/useAuth"; // Add this import
+import { useAuth } from "../context/useAuth";
 
 const ItemsList = () => {
-  const { user } = useAuth(); // Add this line
+  const { user } = useAuth();
   const [sortBy, setSortBy] = useState("newest");
   const [selectedImage, setSelectedImage] = useState(null);
   const [items, setItems] = useState([]);
@@ -18,55 +27,80 @@ const ItemsList = () => {
     category: "all",
     status: "all",
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [lastVisibleDoc, setLastVisibleDoc] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [pageHistory, setPageHistory] = useState([]); // Track pagination history
 
   const placeholderImage = "https://placehold.co/600x400";
 
-  // Add categories array
-  const categories = [
-    "Electronics",
-    "Documents",
-    "Clothing",
-    "Accessories",
-    "Books",
-    "Others",
-  ];
+  // Reset pagination when sorting changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setPageHistory([]);
+    setLastVisibleDoc(null);
+  }, [sortBy]);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "items"), (snapshot) => {
-      const itemsData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        // Convert Firestore timestamp to Date
-        date: doc.data().date?.toDate(),
-      }));
-      setItems(itemsData);
-      setLoading(false);
-    });
+    const fetchItems = async () => {
+      setLoading(true);
+      try {
+        let q = query(
+          collection(db, "items"),
+          orderBy("date", sortBy === "newest" ? "desc" : "asc"),
+          limit(itemsPerPage)
+        );
 
-    return () => unsubscribe();
-  }, []);
+        // Get startAfter document from page history
+        const startAfterDoc =
+          currentPage > 1 ? pageHistory[currentPage - 2] : null;
+        if (startAfterDoc) {
+          q = query(q, startAfter(startAfterDoc));
+        }
 
-  const handleClaimItem = async (itemId) => {
-    try {
-      if (!user) {
-        alert("You need to log in to claim an item.");
-        return;
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const itemsData = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            date: doc.data().date?.toDate(),
+          }));
+
+          setItems(itemsData);
+          setLastVisibleDoc(snapshot.docs[snapshot.docs.length - 1]);
+          setHasMore(itemsData.length === itemsPerPage);
+          setLoading(false);
+        });
+
+        return () => unsubscribe();
+      } catch (error) {
+        console.error("Error fetching items:", error);
+        setLoading(false);
       }
+    };
 
-      const item = items.find((item) => item.id === itemId);
-      if (item.reportedBy === user.email) {
-        alert("You cannot claim your own item.");
-        return;
-      }
+    fetchItems();
+  }, [currentPage, sortBy, pageHistory]); // Include pageHistory in dependencies
 
-      await claimItem(itemId);
-      alert("Item claimed successfully!");
-    } catch (error) {
-      console.error("Error claiming item:", error);
-      alert(error.message || "Error claiming item. Please try again.");
+  const handleNextPage = () => {
+    if (hasMore) {
+      setPageHistory((prev) => [...prev, lastVisibleDoc]);
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setPageHistory((prev) => {
+        const newHistory = [...prev];
+        newHistory.pop();
+        return newHistory;
+      });
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
+
+  // Modify filteredItems calculation
   const filteredItems = items
     .filter((item) => {
       const matchesType =
@@ -88,166 +122,116 @@ const ItemsList = () => {
       return a.date - b.date; // Oldest first
     });
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <BarLoader color="#36d7b7" loading={loading} size={150} />
-      </div>
-    );
-  }
+  const handleFilterChange = (filterType, value) => {
+    setFilters((prev) => ({ ...prev, [filterType]: value }));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        <FiltersSection
+          filters={filters}
+          sortBy={sortBy}
+          searchQuery={searchQuery}
+          categories={[
+            "Electronics",
+            "Documents",
+            "Clothing",
+            "Accessories",
+            "Books",
+            "Others",
+          ]}
+          onFilterChange={handleFilterChange}
+          onSortChange={setSortBy}
+          onSearchChange={setSearchQuery}
+        />
         {/* Filters Section */}
-        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Item Type
-              </label>
-              <select
-                className="w-full p-2 border rounded-md"
-                value={filters.itemType}
-                onChange={(e) =>
-                  setFilters({ ...filters, itemType: e.target.value })
-                }>
-                <option value="all">All Types</option>
-                <option value="lost">Lost Items</option>
-                <option value="found">Found Items</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
-              </label>
-              <select
-                className="w-full p-2 border rounded-md"
-                value={filters.category}
-                onChange={(e) =>
-                  setFilters({ ...filters, category: e.target.value })
-                }>
-                <option value="all">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
-              <select
-                className="w-full p-2 border rounded-md"
-                value={filters.status}
-                onChange={(e) =>
-                  setFilters({ ...filters, status: e.target.value })
-                }>
-                <option value="all">All Statuses</option>
-                <option value="unclaimed">Unclaimed</option>
-                <option value="claimed">Claimed</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sort By
-              </label>
-              <select
-                className="w-full p-2 border rounded-md"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}>
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search
-              </label>
-              <input
-                type="text"
-                placeholder="Search items..."
-                className="w-full p-2 border rounded-md"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
 
         {/* Items Main Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredItems.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <img
-                src={item.image || placeholderImage}
-                alt={item.name}
-                className="w-full h-48 object-cover rounded-t-lg cursor-zoom-in"
-                onClick={() => setSelectedImage(item.image)} // Add this click handler
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = placeholderImage;
-                }}
-              />
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-lg font-semibold">{item.name}</h3>
-                  <span
-                    className={`px-2 py-1 text-sm rounded-full ${
-                      item.status === "claimed"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-blue-100 text-blue-800"
-                    }`}>
-                    {item.status}
-                  </span>
-                </div>
-                <p className="text-gray-600 text-sm mb-2">{item.description}</p>
-                <div className="space-y-1 text-sm">
-                  <p>
-                    <span className="font-medium">Type:</span> {item.type}
-                  </p>
-                  <p>
-                    <span className="font-medium">Category:</span>{" "}
-                    {item.category}
-                  </p>
-                  <p>
-                    <span className="font-medium">Date:</span>{" "}
-                    {new Date(item.date).toLocaleDateString()}
-                  </p>
-                  <p>
-                    <span className="font-medium">Location:</span>{" "}
-                    {item.location}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    <span className="font-medium">Submitted By:</span>{" "}
-                    {item.reportedBy}
-                  </p>
-                </div>
-                <div className="mt-4 flex justify-end space-x-2">
-                  <button
-                    onClick={() => setSelectedItem(item)}
-                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                    View Details
-                  </button>
-                  {item.status === "unclaimed" &&
-                    user?.email !== item.reportedBy && (
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <BarLoader color="#36d7b7" loading={loading} size={150} />
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                  <img
+                    src={item.image || placeholderImage}
+                    alt={item.name}
+                    className="w-full h-48 object-cover rounded-t-lg cursor-zoom-in"
+                    onClick={() => setSelectedImage(item.image)} // Add this click handler
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = placeholderImage;
+                    }}
+                  />
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-lg font-semibold">{item.name}</h3>
+                      <span
+                        className={`px-2 py-1 text-sm rounded-full ${
+                          item.status === "claimed"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-blue-100 text-blue-800"
+                        }`}>
+                        {item.status}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 text-sm mb-2">
+                      {item.description}
+                    </p>
+                    <div className="space-y-1 text-sm">
+                      <p>
+                        <span className="font-medium">Type:</span> {item.type}
+                      </p>
+                      <p>
+                        <span className="font-medium">Category:</span>{" "}
+                        {item.category}
+                      </p>
+                      <p>
+                        <span className="font-medium">Date:</span>{" "}
+                        {new Date(item.date).toLocaleDateString()}
+                      </p>
+                      <p>
+                        <span className="font-medium">Location:</span>{" "}
+                        {item.location}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-2">
+                        <span className="font-medium">Submitted By:</span>{" "}
+                        {item.reportedBy}
+                      </p>
+                    </div>
+                    <div className="mt-4 flex justify-end space-x-2">
                       <button
-                        onClick={() => handleClaimItem(item.id)}
-                        className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">
-                        Claim Item
+                        onClick={() => setSelectedItem(item)}
+                        className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        View Details
                       </button>
-                    )}
+                      {item.status === "unclaimed" &&
+                        user?.email !== item.reportedBy && (
+                          <button
+                            onClick={() => handleClaimItem(item.id)}
+                            className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">
+                            Claim Item
+                          </button>
+                        )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
+            <PaginationControls
+              currentPage={currentPage}
+              hasMore={hasMore}
+              onPrevPage={handlePrevPage}
+              onNextPage={handleNextPage}
+            />
+          </>
+        )}
 
         {/* Detail Modal */}
         {selectedItem && (

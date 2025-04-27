@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { auth, signOutUser } from "../firebase";
 import { useEffect, useState } from "react";
-import SiteStats from "./SiteStats";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
