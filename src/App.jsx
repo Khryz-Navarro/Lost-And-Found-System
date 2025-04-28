@@ -8,6 +8,7 @@ import ReportItem from "./components/ReportItem";
 import Navbar from "./components/Navbar";
 import ItemsList from "./components/ItemsList";
 import ArchivedItems from "./components/ArchivedItems";
+// import AdminDashboard from "./components/AdminDashboard";
 
 const App = () => {
   const { user, loading } = useAuth();
@@ -47,6 +48,7 @@ const App = () => {
           path="/archived"
           element={user ? <ArchivedItems /> : <Navigate to="/login" />}
         />
+        {/* <Route path="/admin" element={<AdminDashboard />} /> */}
       </Routes>
     </BrowserRouter>
   );

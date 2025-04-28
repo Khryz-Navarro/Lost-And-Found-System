@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { addItem } from "../firebase";
 import { supabase } from "../supabase"; // Add this import
-import { uploadImageToSupabase } from "../supabase";
+// import { uploadImageToSupabase } from "../supabase";
+import { useAuth } from "../context/useAuth";
 
 const initialFormState = {
   itemName: "",
@@ -15,6 +16,7 @@ const initialFormState = {
 };
 
 const ReportItem = () => {
+  const { user } = useAuth(); // Add this line
   const [formData, setFormData] = useState(initialFormState);
   const [uploading, setUploading] = useState(false);
 
@@ -67,6 +69,8 @@ const ReportItem = () => {
         date: new Date(formData.date),
         location: formData.location,
         image: imageUrl,
+        reportedBy: user.email, // Changed from UID to email
+        status: "unclaimed", // Add initial status
       });
 
       setFormData(initialFormState);

@@ -2,6 +2,7 @@ import { FaGithub, FaFacebook, FaLinkedin, FaTiktok } from "react-icons/fa";
 import { useState } from "react";
 import { useEffect, useRef } from "react";
 import ItemsList from "./ItemsList";
+import SiteStats from "./SiteStats";
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -149,6 +150,9 @@ const Home = () => {
                 Safely claim your item after verification process
               </p>
             </div>
+            <SiteStats />
+            <SiteStats />
+            <SiteStats />
           </div>
         </div>
       </div>
