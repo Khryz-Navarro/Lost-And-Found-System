@@ -28,7 +28,7 @@ const ItemsList = () => {
     status: "all",
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(12);
   const [lastVisibleDoc, setLastVisibleDoc] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [pageHistory, setPageHistory] = useState([]); // Track pagination history
@@ -127,8 +127,8 @@ const ItemsList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 p-6 flex flex-col">
+      <div className="max-w-7xl mx-auto flex-grow">
         <FiltersSection
           filters={filters}
           sortBy={sortBy}
@@ -224,12 +224,14 @@ const ItemsList = () => {
                 </div>
               ))}
             </div>
-            <PaginationControls
-              currentPage={currentPage}
-              hasMore={hasMore}
-              onPrevPage={handlePrevPage}
-              onNextPage={handleNextPage}
-            />
+            <div className="sticky bottom-0 bg-gray-50 py-4 mt-4 border-t border-gray-200">
+              <PaginationControls
+                currentPage={currentPage}
+                hasMore={hasMore}
+                onPrevPage={handlePrevPage}
+                onNextPage={handleNextPage}
+              />
+            </div>
           </>
         )}
 
