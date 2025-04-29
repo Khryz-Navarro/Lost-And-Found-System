@@ -8,6 +8,7 @@ import ReportItem from "./components/ReportItem";
 import Navbar from "./components/Navbar";
 import ItemsList from "./components/ItemsList";
 import ArchivedItems from "./components/ArchivedItems";
+import SignUp from "./components/SignUp";
 // import AdminDashboard from "./components/AdminDashboard";
 
 const App = () => {
@@ -24,6 +25,14 @@ const App = () => {
     <BrowserRouter>
       <Navbar />
       <Routes>
+        <Route
+          path="/signup"
+          element={user ? <Navigate to="/home" /> : <SignUp />}
+        />
+        <Route
+          path="/admin"
+          element={user?.isAdmin ? <AdminDashboard /> : <Navigate to="/" />}
+        />
         <Route
           path="/"
           element={user ? <Navigate to="/home" /> : <Navigate to="/login" />}

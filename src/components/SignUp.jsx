@@ -1,14 +1,29 @@
 import { useState } from "react";
-import GoogleSignIn from "./GoogleSignIn";
 import { Link } from "react-router-dom";
+import GoogleSignIn from "./GoogleSignIn";
+import { auth } from "../firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
-const Login = () => {
+const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      return setError("Passwords do not match");
+    }
+    try {
+      setLoading(true);
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -21,9 +36,14 @@ const Login = () => {
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
               <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Sign in to your account
+                Create New Account
               </h2>
             </div>
+
+            {error && (
+              <div className="text-red-600 text-sm text-center">{error}</div>
+            )}
+
             <div>
               <label
                 htmlFor="email"
@@ -55,7 +75,6 @@ const Login = () => {
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="current-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -64,73 +83,58 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
+            <div>
+              <label
+                htmlFor="confirm-password"
+                className="block text-sm font-medium text-gray-700">
+                Confirm Password
+              </label>
+              <div className="mt-1">
                 <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  id="confirm-password"
+                  name="confirm-password"
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-900">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm flex">
-                <p className="text-black mr-1">Dont have an account?</p>
-                <Link
-                  to="/signup"
-                  className="font-medium text-indigo-600 hover:text-indigo-500">
-                  Sign Up
-                </Link>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <a
-                  href="#" //redirect to Forgot Password page
-                  className="font-medium text-indigo-600 hover:text-indigo-500">
-                  Forgot Password
-                </a>
-              </div>
-              <div className="text-sm flex">
-                <a
-                  href="#TOS" //redirect to Terms of Service page
-                  className="font-medium text-indigo-600 hover:text-indigo-500">
-                  Terms of Service
-                </a>
               </div>
             </div>
 
             <div>
               <button
                 type="submit"
-                disabled={!email || !password}
+                disabled={loading || !email || !password || !confirmPassword}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                Sign in
+                {loading ? "Creating Account..." : "Sign Up"}
               </button>
             </div>
-            <div>
-              <div className="mt-4">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">
-                      Or continue with
-                    </span>
-                  </div>
+
+            <div className="text-sm text-center">
+              <p className="text-black">
+                Already have an account?{" "}
+                <Link
+                  to="/login"
+                  className="font-medium text-indigo-600 hover:text-indigo-500">
+                  Log in
+                </Link>
+              </p>
+            </div>
+
+            <div className="mt-4">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
                 </div>
-                <div className="mt-6">
-                  <GoogleSignIn />
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">
+                    Or continue with
+                  </span>
                 </div>
+              </div>
+              <div className="mt-6">
+                <GoogleSignIn />
               </div>
             </div>
           </form>
@@ -139,4 +143,5 @@ const Login = () => {
     </div>
   );
 };
-export default Login;
+
+export default SignUp;
