@@ -209,7 +209,7 @@ const Home = () => {
               <ul className="space-y-2 text-gray-400">
                 <li>Email: lostandfound@usm.edu.ph</li>
                 <li>Phone: (555) 123-4567</li>
-                <li>Office: Room 105, Main Building</li>
+                <li>University of Southern Mindanao Main Campus</li>
               </ul>
             </div>
           </div>
