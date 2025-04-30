@@ -150,8 +150,8 @@ const Home = () => {
                 Safely claim your item after verification process
               </p>
             </div>
-            <SiteStats />
-            <SiteStats />
+          </div>
+          <div className="items-center">
             <SiteStats />
           </div>
         </div>
