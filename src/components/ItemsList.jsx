@@ -214,7 +214,7 @@ const ItemsList = () => {
                       {item.status === "unclaimed" &&
                         user?.email !== item.reportedBy && (
                           <button
-                            onClick={() => handleClaimItem(item.id)}
+                            onClick={() => claimItem(item.id)}
                             className="px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700">
                             Claim Item
                           </button>

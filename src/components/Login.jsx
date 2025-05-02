@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  setPersistence,
+  browserSessionPersistence,
+  browserLocalPersistence,
+} from "firebase/auth";
 import { auth } from "../firebase";
 import GoogleSignIn from "./GoogleSignIn";
 import { Link, useNavigate } from "react-router-dom";
@@ -18,7 +23,10 @@ const Login = () => {
 
     try {
       // Set authentication persistence
-      await auth.setPersistence(rememberMe ? "local" : "session");
+      await setPersistence(
+        auth,
+        rememberMe ? browserLocalPersistence : browserSessionPersistence
+      );
 
       // Sign in with email/password
       const userCredential = await signInWithEmailAndPassword(
