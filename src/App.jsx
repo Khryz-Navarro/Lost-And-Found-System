@@ -10,6 +10,8 @@ import ItemsList from "./components/ItemsList";
 import ArchivedItems from "./components/ArchivedItems";
 import SignUp from "./components/SignUp";
 // import AdminDashboard from "./components/AdminDashboard";
+import ForgotPassword from "./components/ForgotPassword";
+import UserProfile from "./components/UserProfile";
 
 const App = () => {
   const { user, loading } = useAuth();
@@ -57,7 +59,18 @@ const App = () => {
           path="/archived"
           element={user ? <ArchivedItems /> : <Navigate to="/login" />}
         />
-        {/* <Route path="/admin" element={<AdminDashboard />} /> */}
+        <Route
+          path="/forgot-password"
+          element={user ? <Navigate to="/home" /> : <ForgotPassword />}
+        />
+        <Route
+          path="/profile"
+          element={user ? <UserProfile /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/admin"
+          element={user?.isAdmin ? <AdminDashboard /> : <Navigate to="/" />}
+        />
       </Routes>
     </BrowserRouter>
   );

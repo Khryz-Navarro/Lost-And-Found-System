@@ -24,15 +24,17 @@ const SiteStats = () => {
 
         setStats({
           listedItems: itemsSnapshot.data().count || 0,
-          totalUsers: usersSnapshot.data().count || 0,
-          onlineUsers: 0, // Temporarily disabled until presence system is added
+          totalUsers: usersSnapshot.data().count,
+          onlineUsers: 0, // Still requires presence system
         });
       } catch (error) {
         console.error("Error fetching stats:", error);
+        // Add error state to show in UI
+        setError("Failed to load statistics");
         setStats({
-          listedItems: 0,
-          totalUsers: 0,
-          onlineUsers: 0,
+          listedItems: "N/A",
+          totalUsers: "N/A",
+          onlineUsers: "N/A",
         });
       } finally {
         setLoading(false);

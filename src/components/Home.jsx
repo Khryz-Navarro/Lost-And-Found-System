@@ -55,14 +55,14 @@ const Home = () => {
             Find your lost items quickly and easily with our lost & found system
           </p>
           <div className="max-w-2xl mx-auto relative" ref={searchRef}>
-            <input
+            {/* <input
               type="text"
               placeholder="Search for lost items (e.g., 'blue jacket', 'math book')"
               className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setShowSuggestions(true)}
-            />
+            /> */}
 
             {showSuggestions && filteredSuggestions.length > 0 && (
               <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg">

@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import GoogleSignIn from "./GoogleSignIn";
 import { auth } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -13,18 +15,35 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); // Clear previous errors
     if (password !== confirmPassword) {
       return setError("Passwords do not match");
     }
     try {
       setLoading(true);
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      // Add user document to Firestore
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        email: userCredential.user.email,
+        createdAt: new Date(),
+        lastLogin: new Date(),
+        provider: "email/password",
+      });
     } catch (err) {
-      setError(err.message);
+      setError(err.message.replace("Firebase: ", "")); // Cleaner error messages
     } finally {
       setLoading(false);
     }
   };
+
+  {
+    error && <div className="text-red-600 text-sm text-center">{error}</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">

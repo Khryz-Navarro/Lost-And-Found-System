@@ -15,6 +15,7 @@ function GoogleSignIn() {
         lastLogin: new Date(),
         displayName: result.user.displayName,
         photoURL: result.user.photoURL,
+        provider: "google", // Add this field
       });
       window.location.href = "/home";
     } catch (error) {
