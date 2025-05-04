@@ -25,9 +25,7 @@ const UserProfile = () => {
             <div className="bg-gray-50 p-4 rounded-lg">
               <dl className="space-y-4">
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">
-                    Full Name
-                  </dt>
+                  <dt className="text-sm font-medium text-gray-500">Name</dt>
                   <dd className="mt-1 text-lg text-gray-900">
                     {user?.name || "N/A"}
                   </dd>
