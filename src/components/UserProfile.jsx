@@ -1,5 +1,4 @@
 import { useAuth } from "../context/useAuth";
-import Usm from "../assets/usm_logo_192x192.png";
 import { Link } from "react-router-dom";
 
 const UserProfile = () => {
@@ -14,7 +13,11 @@ const UserProfile = () => {
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <div className="space-y-6">
             <div className="flex justify-center mb-4">
-              <img src={Usm} alt="USM Logo" className="h-24 w-24" />
+              <img
+                src={user?.profile}
+                alt="User Profile"
+                className="h-24 w-24 rounded-full"
+              />
             </div>
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
               <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -25,9 +28,7 @@ const UserProfile = () => {
             <div className="bg-gray-50 p-4 rounded-lg">
               <dl className="space-y-4">
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">
-                    Full Name
-                  </dt>
+                  <dt className="text-sm font-medium text-gray-500">Name</dt>
                   <dd className="mt-1 text-lg text-gray-900">
                     {user?.name || "N/A"}
                   </dd>

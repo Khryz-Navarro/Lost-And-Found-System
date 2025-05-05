@@ -47,6 +47,7 @@ export function useAuth() {
             name: firebaseUser.displayName, // Map displayName to name
             isAdmin: tokenResult.claims.isAdmin || false,
             emailVerified: firebaseUser.emailVerified,
+            profile: firebaseUser.photoURL, // Add UserProfile component to user object
           });
         } catch (error) {
           console.error("Error fetching user claims:", error);
@@ -56,6 +57,7 @@ export function useAuth() {
             name: firebaseUser.displayName,
             isAdmin: false,
             emailVerified: firebaseUser.emailVerified,
+            profile: firebaseUser.photoURL,
           });
         }
       } else {

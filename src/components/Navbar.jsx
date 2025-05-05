@@ -51,6 +51,11 @@ const Navbar = () => {
                   className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600">
                   Archived Items
                 </Link>
+                <Link
+                  to="/profile"
+                  className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600">
+                  UserProfile
+                </Link>
               </nav>
             </div>
           </div>
