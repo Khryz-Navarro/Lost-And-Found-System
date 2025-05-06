@@ -1,10 +1,10 @@
+import { initializeApp } from "firebase/app";
 import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
-  signOut, // Add this import
+  signOut,
 } from "firebase/auth";
-import { initializeApp } from "firebase/app";
 import {
   getFirestore,
   collection,
@@ -14,7 +14,7 @@ import {
   getDocs,
   updateDoc,
   doc,
-  getDoc, // Add this import
+  getDoc,
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -122,27 +122,3 @@ export const claimItem = async (itemId) => {
     claimedBy: user.email,
   });
 };
-
-// Storage Functions
-// export const uploadImage = async (file) => {
-//   try {
-//     // Add timestamp to ensure unique filenames
-//     const fileName = `${Date.now()}_${file.name}`;
-//     const storageRef = ref(storage, `items/${fileName}`);
-
-//     // Upload file
-//     const snapshot = await uploadBytes(storageRef, file);
-
-//     // Get public URL
-//     return await getDownloadURL(snapshot.ref);
-//   } catch (error) {
-//     console.error("Image upload failed:", error);
-//     throw new Error("Image upload failed. Please try again.");
-//   }
-// };
-
-// const getItemsByUser = async (email) => {
-//   const q = query(collection(db, "items"), where("reportedBy", "==", email));
-//   const querySnapshot = await getDocs(q);
-//   return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-// };
