@@ -9,9 +9,14 @@ import Navbar from "./components/Navbar";
 import ItemsList from "./components/ItemsList";
 import ArchivedItems from "./components/ArchivedItems";
 import SignUp from "./components/SignUp";
-// import AdminDashboard from "./components/AdminDashboard";
+
 import ForgotPassword from "./components/ForgotPassword";
 import UserProfile from "./components/UserProfile";
+
+//admin imports
+// import AdminRegister from "./admin/AdminRegister";
+// import AdminDashboard from "./admin/AdminDashboard";
+// import AdminLogin from "./admin/AdminLogin";
 
 const App = () => {
   const { user, loading } = useAuth();
@@ -25,7 +30,7 @@ const App = () => {
   }
   return (
     <BrowserRouter>
-      <Navbar />
+      {user ? <Navbar /> : null}
       <Routes>
         <Route
           path="/signup"
@@ -67,10 +72,8 @@ const App = () => {
           path="/profile"
           element={user ? <UserProfile /> : <Navigate to="/login" />}
         />
-        <Route
-          path="/admin"
-          element={user?.isAdmin ? <AdminDashboard /> : <Navigate to="/" />}
-        />
+        {/* admin routes */}
+        {/* <Route path="/admin/register" element={<AdminRegister />} /> */}
       </Routes>
     </BrowserRouter>
   );
