@@ -1,5 +1,6 @@
 import { useAuth } from "../context/useAuth";
 import { Link } from "react-router-dom";
+import { FaCircleUser } from "react-icons/fa6";
 
 const UserProfile = () => {
   const { user } = useAuth();
@@ -13,11 +14,15 @@ const UserProfile = () => {
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <div className="space-y-6">
             <div className="flex justify-center mb-4">
-              <img
-                src={user?.profile}
-                alt="User Profile"
-                className="h-24 w-24 rounded-full"
-              />
+              {user?.profile ? (
+                <img
+                  src={user.profile}
+                  alt="User Profile"
+                  className="h-24 w-24 rounded-full pointer-events-none"
+                />
+              ) : (
+                <FaCircleUser className="h-24 w-24 text-gray-400" />
+              )}
             </div>
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
               <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

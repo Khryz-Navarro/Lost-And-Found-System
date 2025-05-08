@@ -14,9 +14,9 @@ import ForgotPassword from "./components/ForgotPassword";
 import UserProfile from "./components/UserProfile";
 
 //admin imports
-// import AdminRegister from "./admin/AdminRegister";
-// import AdminDashboard from "./admin/AdminDashboard";
-// import AdminLogin from "./admin/AdminLogin";
+import AdminRegister from "./admin/AdminRegister";
+import AdminDashboard from "./admin/AdminDashboard";
+import AdminLogin from "./admin/AdminLogin";
 
 const App = () => {
   const { user, loading } = useAuth();
@@ -73,7 +73,7 @@ const App = () => {
           element={user ? <UserProfile /> : <Navigate to="/login" />}
         />
         {/* admin routes */}
-        {/* <Route path="/admin/register" element={<AdminRegister />} /> */}
+        <Route path="/admin/register" element={<AdminRegister />} />
       </Routes>
     </BrowserRouter>
   );
