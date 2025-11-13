@@ -1,4 +1,5 @@
 # Lost And Found System
+Lost and Found System is a digital platform designed to help users report, search, and recover lost items efficiently. It allows individuals to post details of lost or found belongings, manage item records, and connect with rightful owners through an organized and user-friendly interface. This system reduces the hassle of manual searching and increases the chances of reuniting items with their owners quickly and securely.
 
 ### Lost Something?
 
