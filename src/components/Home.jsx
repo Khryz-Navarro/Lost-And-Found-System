@@ -3,18 +3,25 @@ import { useState } from "react";
 import { useEffect, useRef } from "react";
 import ItemsList from "./ItemsList";
 import SiteStats from "./SiteStats";
+import { getItems } from "../firebase";
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [allItems, setAllItems] = useState([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef(null);
-  // const [loading] = useState(true);
+
+  useEffect(() => {
+    getItems()
+      .then(setAllItems)
+      .catch((err) => console.error("Error loading items for search:", err));
+  }, []);
 
   useEffect(() => {
     if (searchQuery.length > 0) {
       const filtered = allItems.filter((item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+        item.name?.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredSuggestions(filtered);
       setShowSuggestions(true);
@@ -22,7 +29,7 @@ const Home = () => {
       setFilteredSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, allItems]);
 
   // Handle clicks outside the search container
   useEffect(() => {

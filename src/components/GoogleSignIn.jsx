@@ -7,15 +7,15 @@ function GoogleSignIn() {
   // Update the handleGoogleSignIn function
   const handleGoogleSignIn = async () => {
     try {
-      const result = await signInWithGoogle();
+      const user = await signInWithGoogle();
       // Create/update user document
-      await setDoc(doc(db, "users", result.user.uid), {
-        email: result.user.email,
+      await setDoc(doc(db, "users", user.uid), {
+        email: user.email,
         createdAt: new Date(),
         lastLogin: new Date(),
-        displayName: result.user.displayName,
-        photoURL: result.user.photoURL,
-        provider: "google", // Add this field
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        provider: "google",
       });
       window.location.href = "/home";
     } catch (error) {

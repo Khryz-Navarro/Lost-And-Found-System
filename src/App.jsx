@@ -15,7 +15,7 @@ import UserProfile from "./components/UserProfile";
 
 //admin imports
 // import AdminRegister from "./admin/AdminRegister";
-// import AdminDashboard from "./admin/AdminDashboard";
+import AdminDashboard from "./admin/AdminDashboard";
 // import AdminLogin from "./admin/AdminLogin";
 
 const App = () => {

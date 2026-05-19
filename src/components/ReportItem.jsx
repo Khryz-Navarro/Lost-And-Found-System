@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { addItem } from "../firebase";
-import { supabase } from "../supabase"; // Add this import
-// import { uploadImageToSupabase } from "../supabase";
+import { isSupabaseReady, uploadImageToSupabase } from "../supabase";
 import { useAuth } from "../context/useAuth";
 
 const initialFormState = {
@@ -39,24 +38,15 @@ const ReportItem = () => {
 
       let imageUrl = null;
       if (formData.image) {
+        if (!isSupabaseReady) {
+          alert(
+            "Image upload is not configured. Add Supabase credentials to .env, or submit without an image."
+          );
+          return;
+        }
+
         setUploading(true);
-
-        // Generate unique filename with folder structure
-        const fileName = `items/${Date.now()}_${formData.image.name}`;
-
-        // Upload to Supabase Storage
-        const { data, error } = await supabase.storage
-          .from("items")
-          .upload(fileName, formData.image);
-
-        if (error) throw error;
-
-        // Get public URL (use the returned data.path)
-        const { data: urlData } = supabase.storage
-          .from("items")
-          .getPublicUrl(data.path);
-
-        imageUrl = urlData.publicUrl;
+        imageUrl = await uploadImageToSupabase(formData.image);
         setUploading(false);
       }
 

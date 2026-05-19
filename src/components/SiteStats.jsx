@@ -10,6 +10,7 @@ const SiteStats = () => {
     listedItems: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -55,6 +56,9 @@ const SiteStats = () => {
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Site Statistics</h2>
+      {error && (
+        <p className="text-red-600 text-sm mb-4">{error}</p>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-blue-50 p-4 rounded-lg">
           <h3 className="text-blue-600 font-semibold text-lg">Online Now</h3>
